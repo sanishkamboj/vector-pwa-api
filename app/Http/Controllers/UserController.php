@@ -10,12 +10,13 @@ use Illuminate\Support\Str;
 use App\UserMas;
 use App\City;
 
-
-
 class UserController extends Controller
 {
     public function check_user(Request $request){
+
         $postData = $request->all();
+        $db_name = $postData['country']."_vectorerp_production";
+        //$this->switchDatabase($db_name, 'mysql');
         $user = UserMas::where('vUsername', $postData['email'])->first();
         if($user){
             $password = $postData['password'];
@@ -73,7 +74,7 @@ class UserController extends Controller
             ];
             return response()->json($response);
         } catch(\Exception $e){
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
     }
 }
