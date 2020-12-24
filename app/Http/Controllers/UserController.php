@@ -16,6 +16,7 @@ class UserController extends Controller
 {
     public function check_user(Request $request){
         $postData = $request->all();
+        $country = $postData['country'];
         $user = UserMas::where('vUsername', $postData['email'])->first();
         if($user){
             $password = $postData['password'];
