@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\UserMas;
 use App\City;
-
+use App\Site;
 class UserController extends Controller
 {
     public function check_user(Request $request){
@@ -66,7 +66,8 @@ class UserController extends Controller
             $data['site_sub_types'] = SiteSubType::select('iSSTypeId as id', 'iSTypeId as site_type_id', 'vSubTypeName as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['site_attributes'] = SiteAttribute::select('iSAttributeId as id', 'vAttribute as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['cities'] = City::select('iCityId as id', 'vCity as name')->get();
-            
+            $data['sites'] = Site::getSiteData();
+            dd($data['sites']);
             $response = [
                 'status' => 200,
                 'message' => 'Data found',
