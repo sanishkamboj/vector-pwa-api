@@ -17,15 +17,14 @@ class Site extends Model
            $sIdsArr[$key] = $value->iSTypeId;
         }
         $sIds = implode(",", $sIdsArr);
-        $where[] = 'iSTypeId IN('.$sIds.')';
+        $where[] = '"iSTypeId" IN('.$sIds.')';
 
-        $where[] ='iStatus = 1';
+        $where[] ='"iStatus" = 1';
 
         $whereQuery = implode(" AND ", $where);
-    
-        $filterSql = 'iSiteId as siteid, iSTypeId as sTypeId, iCityId, iZoneId, st_astext(ST_Centroid("vPolygonLatLong")) as polyCenter, st_astext("vPolygonLatLong") as polygon, st_astext("vPointLatLong") as point, st_astext("vPolyLineLatLong") as poly_line ';
-        $data = DB::table('site_mas')->select($filterSql)->whereRaw($whereQuery)->get();
-        dd($data);
-        return $sIdsArr;
+
+        $data = DB::select(DB::raw('SELECT "iSiteId" as siteid, "iSTypeId" as sTypeId, "iCityId", "iZoneId", st_astext(ST_Centroid("vPolygonLatLong")) as polyCenter, st_astext("vPolygonLatLong") as polygon, st_astext("vPointLatLong") as point, st_astext("vPolyLineLatLong") as poly_line FROM site_mas Where '.$whereQuery.' Limit 1,1'));
+        
+        return $data;
     }
 }
