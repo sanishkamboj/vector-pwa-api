@@ -67,8 +67,7 @@ class UserController extends Controller
             $data['site_sub_types'] = SiteSubType::select('iSSTypeId as id', 'iSTypeId as site_type_id', 'vSubTypeName as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['site_attributes'] = SiteAttribute::select('iSAttributeId as id', 'vAttribute as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['cities'] = City::select('iCityId as id', 'vCity as name')->get();
-            $sites = Site::getSiteData();
-            $data['sites'] = $this->get_site_json($sites);
+            
             $response = [
                 'status' => 200,
                 'message' => 'Data found',
@@ -80,11 +79,19 @@ class UserController extends Controller
         }
     }
 
+    public function get_sites_data(Request $request){
+        $page = $request->page;
+        $offset = ($page * 1000);
+        $sites = Site::getSiteData($offset);
+        //dd($sites);
+        $data['sites'] = $this->get_site_json($sites);
+
+    }
     public function get_site_json($siteData){
         $geoArr = array();
         $i = 0;
         foreach($siteData as $site){
-            dd($site);
+            //dd($site);
             if(isset($site->polygon) && $site->polygon != ''){
                     //print_r($site);
 

@@ -10,6 +10,7 @@
     "require": {
         "php": "^7.2.5|^8.0",
         "barryvdh/laravel-cors": "^2.0",
+        "barryvdh/laravel-debugbar": "~1.8",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
         "laravel/framework": "^6.20",
@@ -18,7 +19,6 @@
     "require-dev": {
         "facade/ignition": "^1.16.4",
         "fakerphp/faker": "^1.9.1",
-        "jkocik/laravel-profiler": "^2.0",
         "mockery/mockery": "^1.0",
         "nunomaduro/collision": "^3.0",
         "phpunit/phpunit": "^8.5.8|^9.3.3"

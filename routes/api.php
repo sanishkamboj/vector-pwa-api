@@ -18,3 +18,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('/user/check', 'UserController@check_user');
 Route::get('/user/get-data', 'UserController@get_table_data');
+Route::get('/user/get-sites', 'UserController@get_sites_data');
