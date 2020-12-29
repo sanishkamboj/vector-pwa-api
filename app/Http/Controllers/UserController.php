@@ -138,7 +138,7 @@ class UserController extends Controller
                     'lat' => (float) $pointArr[1],
                     'lng' => (float) $pointArr[0]
                     );
-                $i++;
+               
                 $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
