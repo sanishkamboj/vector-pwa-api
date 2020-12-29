@@ -156,7 +156,7 @@ class UserController extends Controller
                     $polyLineLatLngArr = explode(" ", $latlng);
 
                         //print_r($latLngArr);
-                    $geoArr['sites'][$site['siteid']]['poly_line'][] = array(
+                    $geoArr['sites'][$site->siteid]['poly_line'][] = array(
                         'lat' => (float) $polyLineLatLngArr[1],
                         'lng' => (float) $polyLineLatLngArr[0]
                         );
