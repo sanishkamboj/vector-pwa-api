@@ -170,11 +170,11 @@ class UserController extends Controller
             }
 
         }
-        $data['sites'] = $geoArr;
+        //$data['sites'] = $geoArr;
         $response = [
             'status' => 200,
             'message' => 'Data found',
-            'data' => $data
+            'data' => $geoArr
         ];
 
         return response()->json($response);
