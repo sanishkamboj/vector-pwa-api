@@ -108,7 +108,7 @@ class UserController extends Controller
                         'lat' => (float) $latLngArr[1],
                         'lng' => (float) $latLngArr[0]
                         );
-                    $i++;
+                  
                 }
                 if(isset($site->polycenter) && $site->polycenter != ''){
                     $center = str_replace("POINT(", '', $site->polycenter);
@@ -138,7 +138,7 @@ class UserController extends Controller
                     'lat' => (float) $pointArr[1],
                     'lng' => (float) $pointArr[0]
                     );
-               
+                $geoArr['sites'][$i]['siteid'] = $site->siteid;
                 $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
@@ -161,9 +161,9 @@ class UserController extends Controller
                         'lat' => (float) $polyLineLatLngArr[1],
                         'lng' => (float) $polyLineLatLngArr[0]
                         );
-                    $i++;
+                   
                 }
-
+                $geoArr['sites'][$i]['siteid'] = $site->siteid;
                 $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
