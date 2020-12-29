@@ -104,7 +104,7 @@ class UserController extends Controller
                     $latLngArr = explode(" ", $latlng);
 
                         //print_r($latLngArr);
-                    $geoArr['sites'][$site->siteid]['polygon'][] = array(
+                    $geoArr['sites'][$i]['polygon'][] = array(
                         'lat' => (float) $latLngArr[1],
                         'lng' => (float) $latLngArr[0]
                         );
@@ -115,15 +115,16 @@ class UserController extends Controller
                     $polyCenter = str_replace(")", '', $center);
                     $polyCenterArr = explode(" ", $polyCenter);
                         //print_r($polyCenterArr); die;
-                    $geoArr['sites'][$site->siteid]['polyCenter'] = array(
+                    $geoArr['sites'][$i]['polyCenter'] = array(
                         'lat' => (float) $polyCenterArr[1],
                         'lng' => (float) $polyCenterArr[0]
                         );
                 }
-                $geoArr['sites'][$site->siteid]['icon'] = $this->getSiteTypeIcon($site->stypeid);
-                $geoArr['sites'][$site->siteid]['cityid'] = $site->iCityId;
-                $geoArr['sites'][$site->siteid]['zoneid'] = $site->iZoneId;
-                $geoArr['sites'][$site->siteid]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['siteid'] = $site->siteid;
+                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
+                $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
             } else if(isset($site->point) && $site->point != ''){
 
                 $point = str_replace("POINT(", '', $site->point);
@@ -133,15 +134,15 @@ class UserController extends Controller
 
                     //print_r($latLngArr);
 
-                $geoArr['sites'][$site->siteid]['point'][] =  array(
+                $geoArr['sites'][$i]['point'][] =  array(
                     'lat' => (float) $pointArr[1],
                     'lng' => (float) $pointArr[0]
                     );
                 $i++;
-                $geoArr['sites'][$site->siteid]['icon'] = $this->getSiteTypeIcon($site->stypeid);
-                $geoArr['sites'][$site->siteid]['cityid'] = $site->iCityId;
-                $geoArr['sites'][$site->siteid]['zoneid'] = $site->iZoneId;
-                $geoArr['sites'][$site->siteid]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
+                $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
             } else if(isset($site->poly_line) && $site->poly_line != ''){
                 $polyLine = str_replace("LINESTRING(", '', $site->poly_line);
                 $polyLine = str_replace(")", '', $polyLine);
@@ -156,17 +157,17 @@ class UserController extends Controller
                     $polyLineLatLngArr = explode(" ", $latlng);
 
                         //print_r($latLngArr);
-                    $geoArr['sites'][$site->siteid]['poly_line'][] = array(
+                    $geoArr['sites'][$i]['poly_line'][] = array(
                         'lat' => (float) $polyLineLatLngArr[1],
                         'lng' => (float) $polyLineLatLngArr[0]
                         );
                     $i++;
                 }
 
-                $geoArr['sites'][$site->siteid]['icon'] = $this->getSiteTypeIcon($site->stypeid);
-                $geoArr['sites'][$site->siteid]['cityid'] = $site->iCityId;
-                $geoArr['sites'][$site->siteid]['zoneid'] = $site->iZoneId;
-                $geoArr['sites'][$site->siteid]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid);
+                $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
             }
 
         }
