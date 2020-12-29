@@ -84,21 +84,9 @@ class UserController extends Controller
         $offset = ($page * 100);
         $sites = Site::getSiteData($offset);
         //dd($sites);
-        $data['sites'] = $this->get_site_json($sites);
-
-        $response = [
-            'status' => 200,
-            'message' => 'Data found',
-            'data' => $data
-        ];
-
-        return response()->json($response);
-
-    }
-    public function get_site_json($siteData){
         $geoArr = array();
         $i = 0;
-        foreach($siteData as $site){
+        foreach($sites as $site){
             //dd($site);
             if(isset($site->polygon) && $site->polygon != ''){
                     //print_r($site);
@@ -182,7 +170,15 @@ class UserController extends Controller
             }
 
         }
-        return $geoArr;
+        $data['sites'] = $geoArr;
+        $response = [
+            'status' => 200,
+            'message' => 'Data found',
+            'data' => $data
+        ];
+
+        return response()->json($response);
+
     }
 
     public function getSiteTypeIcon($siteId){
