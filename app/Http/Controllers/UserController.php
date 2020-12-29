@@ -83,7 +83,7 @@ class UserController extends Controller
         $page = $request->page;
         $offset = ($page * 100);
         $sites = Site::getSiteData($offset);
-        //dd($sites);
+       
         $geoArr = array();
         $i = 0;
         foreach($sites as $site){
