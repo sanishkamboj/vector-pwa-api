@@ -169,7 +169,7 @@ class UserController extends Controller
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
             }
-
+            $i++;
         }
         //$data['sites'] = $geoArr;
         $response = [
