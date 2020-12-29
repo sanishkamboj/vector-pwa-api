@@ -81,10 +81,18 @@ class UserController extends Controller
 
     public function get_sites_data(Request $request){
         $page = $request->page;
-        $offset = ($page * 1000);
+        $offset = ($page * 100);
         $sites = Site::getSiteData($offset);
         //dd($sites);
         $data['sites'] = $this->get_site_json($sites);
+
+        $response = [
+            'status' => 200,
+            'message' => 'Data found',
+            'data' => $data
+        ];
+
+        return response()->json($response);
 
     }
     public function get_site_json($siteData){
@@ -174,7 +182,7 @@ class UserController extends Controller
             }
 
         }
-        dd($geoArr);
+        return $geoArr;
     }
 
     public function getSiteTypeIcon($siteId){
