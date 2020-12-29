@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use DB;
 
 class Zone extends Model
 {
@@ -11,7 +12,7 @@ class Zone extends Model
     public $timestamps = false;
 
     public static function getData(){
-        $data = DB::select(DB::raw('SELECT st_astext("PShape") as geotxt, "iZoneId" FROM zone WHERE AND "iStatus" = 1 ORDER BY iZoneId'));
+        $data = DB::select(DB::raw('SELECT st_astext("PShape") as geotxt, "iZoneId" FROM zone WHERE "iStatus" = 1 ORDER BY "iZoneId" LIMIT 5'));
         dd($data);
         return $data;
     }

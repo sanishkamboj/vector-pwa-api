@@ -198,30 +198,8 @@ class UserController extends Controller
 
     public function getZones(Request $request){
         $zones = Zone::getData();
-        dd($zones);
-        if(isset($zones) && !empty($zones)){
-            foreach($zones as $key => $zone){
-                $polygon = str_replace("POLYGON((", '', $zone['geotxt']);
-                $polygon = str_replace("))", '', $polygon);
-
-                    //print_r($polygon);
-
-                $polyArr = explode(",", $polygon);
-
-                    //print_r($polyArr);
-
-                foreach($polyArr as $latlng){
-                    $latLngArr = explode(" ", $latlng);
-
-                        //print_r($latLngArr);
-                    $geoArr['polyZone'][$zone['iZoneId']][] = array(
-                        'lat' => (float) $latLngArr[1],
-                        'lng' => (float) $latLngArr[0]
-                        );
-                    $i++;
-                }
-            }
-                //print_r($geoArr);
-        }
+        //dd($zones);
+        $i=0;
+        
     }
 }
