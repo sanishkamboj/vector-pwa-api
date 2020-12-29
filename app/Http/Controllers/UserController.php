@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use App\UserMas;
 use App\City;
 use App\Site;
+use App\Zone;
 
 class UserController extends Controller
 {
@@ -193,5 +194,33 @@ class UserController extends Controller
             }
         }
         return $vIcon;
+    }
+
+    public function getZones(Request $request){
+        $zones = Zone::select('st_astext("PShape") as geotxt', '"iZoneId"')->where('iStatus', 1)->get()->toArray();
+        if(isset($zones) && !empty($zones)){
+            foreach($zones as $key => $zone){
+                $polygon = str_replace("POLYGON((", '', $zone['geotxt']);
+                $polygon = str_replace("))", '', $polygon);
+
+                    //print_r($polygon);
+
+                $polyArr = explode(",", $polygon);
+
+                    //print_r($polyArr);
+
+                foreach($polyArr as $latlng){
+                    $latLngArr = explode(" ", $latlng);
+
+                        //print_r($latLngArr);
+                    $geoArr['polyZone'][$zone['iZoneId']][] = array(
+                        'lat' => (float) $latLngArr[1],
+                        'lng' => (float) $latLngArr[0]
+                        );
+                    $i++;
+                }
+            }
+                //print_r($geoArr);
+        }
     }
 }
