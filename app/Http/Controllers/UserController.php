@@ -197,7 +197,8 @@ class UserController extends Controller
     }
 
     public function getZones(Request $request){
-        $zones = Zone::select('st_astext("PShape") as geotxt', '"iZoneId"')->where('iStatus', 1)->get()->toArray();
+        $zones = Zone::getData();
+        dd($zones);
         if(isset($zones) && !empty($zones)){
             foreach($zones as $key => $zone){
                 $polygon = str_replace("POLYGON((", '', $zone['geotxt']);
