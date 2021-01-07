@@ -12,8 +12,7 @@ class Zone extends Model
     public $timestamps = false;
 
     public static function getData(){
-        $data = DB::select(DB::raw('SELECT st_astext("PShape") as geotxt, "iZoneId" FROM zone WHERE "iStatus" = 1 ORDER BY "iZoneId" LIMIT 5'));
-        dd($data);
+        $data = DB::select(DB::raw('SELECT st_astext("PShape") as geotxt, "iZoneId", "vZoneName" FROM zone WHERE "iStatus" = 1 ORDER BY "iZoneId"'));
         return $data;
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use App\UserMas;
 use App\City;
 use App\Site;
+use App\SiteAttrData;
 use App\Zone;
 
 class UserController extends Controller
@@ -67,6 +68,7 @@ class UserController extends Controller
             $data['site_types'] = SiteType::select('iSTypeId as id' , 'vTypeName as name', 'iStatus as status', 'icon as icon')->where('iStatus', 1)->get();
             $data['site_sub_types'] = SiteSubType::select('iSSTypeId as id', 'iSTypeId as site_type_id', 'vSubTypeName as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['site_attributes'] = SiteAttribute::select('iSAttributeId as id', 'vAttribute as name', 'iStatus as status')->where('iStatus', 1)->get();
+            $data['site_attr_data'] = SiteAttrData::select('iSiteId as siteid', 'iSAttributeId as site_attr')->get();
             $data['cities'] = City::select('iCityId as id', 'vCity as name')->get();
             
             $response = [
@@ -82,7 +84,7 @@ class UserController extends Controller
 
     public function get_sites_data(Request $request){
         $page = $request->page;
-        $offset = ($page * 100);
+        $offset = ($page * 1000);
         $sites = Site::getSiteData($offset);
        
         $geoArr = array();
@@ -126,6 +128,8 @@ class UserController extends Controller
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
             } else if(isset($site->point) && $site->point != ''){
 
                 $point = str_replace("POINT(", '', $site->point);
@@ -144,6 +148,8 @@ class UserController extends Controller
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
             } else if(isset($site->poly_line) && $site->poly_line != ''){
                 $polyLine = str_replace("LINESTRING(", '', $site->poly_line);
                 $polyLine = str_replace(")", '', $polyLine);
@@ -169,6 +175,8 @@ class UserController extends Controller
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
             }
             $i++;
         }
@@ -200,6 +208,40 @@ class UserController extends Controller
         $zones = Zone::getData();
         //dd($zones);
         $i=0;
+        $geoArr = array();
+        if(!empty($zones)){
+            foreach($zones as $key => $zone){
+                $polygon = str_replace("POLYGON((", '', $zone->geotxt);
+                $polygon = str_replace("))", '', $polygon);
+
+                    //print_r($polygon);
+
+                $polyArr = explode(",", $polygon);
+
+                    //print_r($polyArr);
+                $geoArr['polyZone'][$i]['zoneid'] = $zone->iZoneId;
+                $geoArr['polyZone'][$i]['name'] = $zone->vZoneName;
+                foreach($polyArr as $latlng){
+                    $latLngArr = explode(" ", $latlng);
+
+                        //print_r($latLngArr);
+                    $geoArr['polyZone'][$i]['lat_long'][] = array(
+                        'lat' => (float) $latLngArr[1],
+                        'lng' => (float) $latLngArr[0]
+                        );
+                    
+                }
+
+                $i++;
+            }
+        }
+        $response = [
+            'status' => 200,
+            'message' => 'Data found',
+            'data' => $geoArr
+        ];
+
+        return response()->json($response);
         
     }
 }
