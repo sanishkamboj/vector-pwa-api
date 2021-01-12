@@ -20,3 +20,6 @@ Route::post('/user/check', 'UserController@check_user');
 Route::get('/user/get-data', 'UserController@get_table_data');
 Route::get('/user/get-sites', 'UserController@get_sites_data');
 Route::get('/user/get-zones','UserController@getZones');
+Route::post('/user/search-site', 'UserController@getSiteByAddress');
+Route::post('/user/get-sr', 'UserController@getSR');
+Route::get('/user/get-site/{id}', 'UserController@getSiteByID');
