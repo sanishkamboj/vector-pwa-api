@@ -7,12 +7,17 @@ use App\SiteSubType;
 use App\SiteType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\TreatmentProduct;
+use App\TrapType;
+use App\TaskType;
+use App\Species;
+use App\SrDetail;
 use App\UserMas;
 use App\City;
 use App\Site;
 use App\SiteAttrData;
 use App\Zone;
-
+use View;
 class UserController extends Controller
 {
     public function check_user(Request $request){
@@ -70,7 +75,11 @@ class UserController extends Controller
             $data['site_attributes'] = SiteAttribute::select('iSAttributeId as id', 'vAttribute as name', 'iStatus as status')->where('iStatus', 1)->get();
             $data['site_attr_data'] = SiteAttrData::select('iSiteId as siteid', 'iSAttributeId as site_attr')->get();
             $data['cities'] = City::select('iCityId as id', 'vCity as name')->get();
-            
+            $data['species'] = Species::where('iStatus', 1)->get();
+            $data['products'] = TreatmentProduct::where('iStatus', 1)->get();
+            $data['trap_type'] = TrapType::where('iStatus', 1)->get();
+            $data['task_type'] = TaskType::where('iStatus', 1)->get();
+            $data['sr_details'] = SrDetail::get();
             $response = [
                 'status' => 200,
                 'message' => 'Data found',
@@ -85,7 +94,7 @@ class UserController extends Controller
     public function get_sites_data(Request $request){
         $page = $request->page;
         $country = $request->country;
-        $offset = ($page * 1000);
+        $offset = ($page * 100);
         $sites = Site::getSiteData($offset);
        
         $geoArr = array();
@@ -124,8 +133,23 @@ class UserController extends Controller
                         'lng' => (float) $polyCenterArr[0]
                         );
                 }
+                $site_type = $this->getSiteTypeIcon($site->stypeid, $country);
+                $address = '';
+                if($site->vAddress1 != ''){
+                    $address .= $site->vAddress1;
+                }
+                if($site->vAddress2 != ''){
+                    $address .= ", ".$site->vAddress2;
+                }
+                if($site->vStreet != ''){
+                    $address .= ", ".$site->vStreet;
+                }
+                $address .= $this->getAddress($site->siteid);
+                $geoArr['sites'][$i]['address'] = $address;
+                $geoArr['sites'][$i]['icon'] = $site_type['icon'];
+                $geoArr['sites'][$i]['site_type_name'] = $site_type['name'];
+                $geoArr['sites'][$i]['site_attr_name'] = $this->getSiteAttr($site->siteid);
                 $geoArr['sites'][$i]['siteid'] = $site->siteid;
-                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
@@ -144,8 +168,23 @@ class UserController extends Controller
                     'lat' => (float) $pointArr[1],
                     'lng' => (float) $pointArr[0]
                     );
+                    $address = '';
+                if($site->vAddress1 != ''){
+                    $address .= $site->vAddress1;
+                }
+                if($site->vAddress2 != ''){
+                    $address .= ", ".$site->vAddress2;
+                }
+                if($site->vStreet != ''){
+                    $address .= ", ".$site->vStreet;
+                }
+                $address .= $this->getAddress($site->siteid);
+                $geoArr['sites'][$i]['address'] = $address;
                 $geoArr['sites'][$i]['siteid'] = $site->siteid;
-                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
+                $site_type = $this->getSiteTypeIcon($site->stypeid, $country);
+                $geoArr['sites'][$i]['icon'] = $site_type['icon'];
+                $geoArr['sites'][$i]['site_type_name'] = $site_type['name'];
+                $geoArr['sites'][$i]['site_attr_name'] = $this->getSiteAttr($site->siteid);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
@@ -171,8 +210,23 @@ class UserController extends Controller
                         );
                    
                 }
+                $address = '';
+                if($site->vAddress1 != ''){
+                    $address .= $site->vAddress1;
+                }
+                if($site->vAddress2 != ''){
+                    $address .= ", ".$site->vAddress2;
+                }
+                if($site->vStreet != ''){
+                    $address .= ", ".$site->vStreet;
+                }
+                $address .= $this->getAddress($site->siteid);
+                $geoArr['sites'][$i]['address'] = $address;
                 $geoArr['sites'][$i]['siteid'] = $site->siteid;
-                $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
+                $site_type = $this->getSiteTypeIcon($site->stypeid, $country);
+                $geoArr['sites'][$i]['icon'] = $site_type['icon'];
+                $geoArr['sites'][$i]['site_type_name'] = $site_type['name'];
+                $geoArr['sites'][$i]['site_attr_name'] = $this->getSiteAttr($site->siteid);
                 $geoArr['sites'][$i]['cityid'] = $site->iCityId;
                 $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
                 $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
@@ -194,7 +248,7 @@ class UserController extends Controller
 
     public function getSiteTypeIcon($siteId, $country){
         
-        $data = SiteType::select('icon')->where(['iSTypeId' => $siteId, 'iStatus' => 1])->first();
+        $data = SiteType::select("vTypeName", 'icon')->where(['iSTypeId' => $siteId, 'iStatus' => 1])->first();
         if(is_null($data)){
             $vIcon = "https://".$country.".vectorcontrolsystem.com/images/black_icon.png";
         } else {
@@ -202,9 +256,23 @@ class UserController extends Controller
                 $vIcon = "https://".$country.".vectorcontrolsystem.com/storage/site_type_icon/".$data->icon;
             }
         }
-        return $vIcon;
+        $siteType['name'] = $data->vTypeName;
+        $siteType['icon'] = $vIcon;
+        return $siteType;
+    }
+    public function getSiteAttr($siteId){
+        $siteAttr = SiteAttrData::with('attribute')->where('iSiteId', 1)->get();
+        $attrs = [];
+        foreach($siteAttr as $attr){
+            $attrs[] = $attr->attribute->vAttribute;
+        }
+        return implode(',', $attrs);
     }
 
+    public function getAddress($id){
+        $data = Site::with('city', 'state', 'country')->where('iSiteId', $id)->first();
+        return $data->city->vCity.", ".$data->state->vState.", ".$data->country->vCounty;
+    }
     public function getZones(Request $request){
         $zones = Zone::getData();
         //dd($zones);
@@ -362,8 +430,84 @@ class UserController extends Controller
         return response()->json($response);
     }
 
-    public function getSR(Request $request){
+    public function getSR(Request $request, $id){
+        $country = $request->country;
+        $srSite = SrDetail::getSRData($id);
+        //dd($srSite);
+        $i = 0;
+        foreach($srSite as $site){
+           
+            if(isset($site->vLatitude) && $site->vLongitude != ''){
+                $vLatitude = $site->vLatitude;
+                $vLongitude = $site->vLongitude;
+                $srData[$i]['point'][] =  array(
+                    'lat' => (float) $vLatitude,
+                    'lng' => (float) $vLongitude
+                    );
 
+                $srData[$i]['icon'] = "https://".$country.".vectorcontrolsystem.com/images/black_icon.png";
+
+                $vFirstName = (isset($site->vFirstName) ? $site->vFirstName : '');
+                $vLastName = (isset($site->vLastName) ? $site->vLastName : '');
+                $vAddress1 = (isset($site->vAddress1) ? $site->vAddress1 : '');
+                $vStreet = (isset($site->vStreet) ? $site->vStreet : '');
+                $vCity = (isset($site->vCity) ? $site->vCity : '');
+                $vState = (isset($site->vState) ? $site->vState : '');
+
+                $vRequestType = '';
+                if($site->bMosquitoService == 't' && $site->bCarcassService != 't') {
+                    $vRequestType = 'Mosquito Inspection/Treatment';
+                }else if($site->bMosquitoService != 't' && $site->bCarcassService == 't') {
+                    $vRequestType = 'Carcass Removal';
+                }else if($site->bMosquitoService == 't' && $site->bCarcassService == 't') {
+                    $vRequestType = 'Mosquito Inspection/Treatment | Carcass Removal';
+                }
+
+                $vStatus = '';
+                if($site->iStatus == 1){
+                    $vStatus = 'Draft';
+                    $srData[$i]['icon'] = "https://".$country.".vectorcontrolsystem.com/images/sr_red.png";
+                }else if($site->iStatus == 2){
+                    $vStatus = 'Assigned';
+                    $srData[$i]['icon'] = "https://".$country.".vectorcontrolsystem.com/images/sr_yellow.png";
+                }else if($site->iStatus == 3){
+                    $vStatus = 'Review';
+                    $srData[$i]['icon'] = "https://".$country.".vectorcontrolsystem.com/images/sr_green.png";
+                }else if($site->Status == 4){
+                    $vStatus = 'Complete';
+                    $srData[$i]['icon'] = "https://".$country.".vectorcontrolsystem.com/images/sr_black.png";
+                }
+                
+                $vAssignTo = ($site->vAssignTo ? $site->vAssignTo :'');
+                $srData[$i]['vName'] = $vFirstName. ' '.$vLastName;
+                $srData[$i]['vAddress'] = $vAddress1.' '.$vStreet.' '.$vCity.' '.$vState ;
+                $srData[$i]['vRequestType'] = $vRequestType;
+                $srData[$i]['vStatus'] = $vStatus;
+                $srData[$i]['vAssignTo'] = $vAssignTo;
+                $view = View::make('sr-window', ['id' => $site->iSRId, 'vRequestType' => $vRequestType, 'address' => $srData[$i]['vAddress'], 'assignto' => $vAssignTo, 'status' => $vStatus, 'country' => $country, 'name' => $srData[$i]['vName']]);
+                $srData[$i]['infowindow'] = $view->render();
+
+
+            }
+        }
+        
+        if(!is_null($srData)){
+            $response = [
+                'status' => 200,
+                'message' => 'Data found',
+                'data' => $srData,
+
+            ];
+    
+            return response()->json($response);
+        }
+        $response = [
+            'status' => 404,
+            'message' => 'No Data found',
+            'data' => []
+        ];
+
+        return response()->json($response);
     }
 
     public function getSiteByID(Request $request, $id){
@@ -476,5 +620,49 @@ class UserController extends Controller
         ];
 
         return response()->json($response);
+    }
+
+    public function UploadData(Request $request){
+        $postData = $request->all();
+        $sites = $postData['sites'];
+        $arr = [];
+        foreach($sites as $k => $site){
+            $arr['vName'] = $site['name'];
+            $arr['iSTypeId'] = $site['siteTypeId'];
+            $arr['iSSTypeId'] = $site['siteSubTypeId'];
+            $arr['vAddress1'] = $site['address1'];
+            $arr['iGeometryType'] = $site['geometryType'];
+            if(isset($site['polygonLatLong']) && $site['polygonLatLong'] != ''){
+                $latLngArr = json_decode($site['polygonLatLong']);
+                    foreach($latLngArr[0] as $lat_lng){
+                        if($lat_lng->lng != ''){
+                            $lnlg[] = $lat_lng->lat." ".$lat_lng->lng;
+                        }
+                    }
+                
+                $arr['vPolygonLatLong'] = 'ST_GeomFromText(POLYGON(\''.implode(",", $lnlg).'\'))';
+            } else {
+                $arr['vPolygonLatLong'] = 'NULL';
+            }
+            if(isset($site['polylineLatLong']) && $site['polylineLatLong'] != ''){
+                $latLngArr = json_decode($site['polylineLatLong']);
+                foreach($latLngArr as $lat_lng){
+                    if($lat_lng->lng != ''){
+                        $lnlg[] = $lat_lng->lng." ".$lat_lng->lat;
+                    }
+                }
+                $arr['vPolyLineLatLong'] = 'ST_GeomFromText(\''.implode(",", $lnlg).'\')';
+            } else {
+                $arr['vPolyLineLatLong'] = 'NULL';
+            }
+            $arr['vLatitude'] = $site['latitude'];
+            $arr['vLongitude'] = $site['longitude'];
+            $arr['iStatus'] = $site['status'];
+            $arr['dAddedDate'] = date("Y-m-d h:i:s"); 
+            print_r($arr);    
+            Site::addRecord($arr);       
+        }
+       
+        return response()->json($arr);
     }
 }
