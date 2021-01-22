@@ -8,6 +8,11 @@ use App\SiteType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\TreatmentProduct;
+use App\TaskLandingRate;
+use App\TaskLarval;
+use App\TaskTrap;
+use App\TaskTreatment;
+use App\TaskOther;
 use App\TrapType;
 use App\TaskType;
 use App\Species;
@@ -625,6 +630,7 @@ class UserController extends Controller
     public function UploadData(Request $request){
         $postData = $request->all();
         $sites = $postData['sites'];
+        $taskLandigRate = $postData['taskLandingRate'];
         $arr = [];
         foreach($sites as $k => $site){
             $arr['vName'] = $site['name'];
@@ -634,24 +640,27 @@ class UserController extends Controller
             $arr['iGeometryType'] = $site['geometryType'];
             if(isset($site['polygonLatLong']) && $site['polygonLatLong'] != ''){
                 $latLngArr = json_decode($site['polygonLatLong']);
-                    foreach($latLngArr[0] as $lat_lng){
+                $lnlg = [];    
+                foreach($latLngArr[0] as $lat_lng){
                         if($lat_lng->lng != ''){
-                            $lnlg[] = $lat_lng->lat." ".$lat_lng->lng;
+                            $lnlg[] = $lat_lng->lng." ".$lat_lng->lat;
                         }
                     }
-                
-                $arr['vPolygonLatLong'] = 'ST_GeomFromText(POLYGON(\''.implode(",", $lnlg).'\'))';
+                    $lnlg[] = $lnlg[0];
+                $arr['vPolygonLatLong'] = implode(",", $lnlg);
             } else {
                 $arr['vPolygonLatLong'] = 'NULL';
             }
             if(isset($site['polylineLatLong']) && $site['polylineLatLong'] != ''){
                 $latLngArr = json_decode($site['polylineLatLong']);
+                $lnlg = [];
                 foreach($latLngArr as $lat_lng){
                     if($lat_lng->lng != ''){
                         $lnlg[] = $lat_lng->lng." ".$lat_lng->lat;
                     }
                 }
-                $arr['vPolyLineLatLong'] = 'ST_GeomFromText(\''.implode(",", $lnlg).'\')';
+                
+                $arr['vPolyLineLatLong'] = implode(",", $lnlg);
             } else {
                 $arr['vPolyLineLatLong'] = 'NULL';
             }
@@ -659,10 +668,145 @@ class UserController extends Controller
             $arr['vLongitude'] = $site['longitude'];
             $arr['iStatus'] = $site['status'];
             $arr['dAddedDate'] = date("Y-m-d h:i:s"); 
-            print_r($arr);    
             Site::addRecord($arr);       
         }
        
-        return response()->json($arr);
+        return response()->json($taskLandigRate);
     }
+
+    function downloadData(Request $request){
+        $country = $request->country;
+        $date = date("Y-m-d", strtotime($request->date));
+        $data = [];
+        $sites = Site::getSitesByDate($date);
+        $data['sites'] = $this->siteArr($sites, $country);
+        $data['site_types'] = SiteType::select('iSTypeId as id' , 'vTypeName as name', 'iStatus as status', 'icon as icon')->where('iStatus', 1)->get();
+        $data['site_sub_types'] = SiteSubType::select('iSSTypeId as id', 'iSTypeId as site_type_id', 'vSubTypeName as name', 'iStatus as status')->where('iStatus', 1)->get();
+        $data['site_attributes'] = SiteAttribute::select('iSAttributeId as id', 'vAttribute as name', 'iStatus as status')->where('iStatus', 1)->get();
+        $data['site_attr_data'] = SiteAttrData::select('iSiteId as siteid', 'iSAttributeId as site_attr')->get();
+        //$data['cities'] = City::select('iCityId as id', 'vCity as name')->get();
+        $data['species'] = Species::where('iStatus', 1)->get();
+        $data['products'] = TreatmentProduct::where('iStatus', 1)->get();
+        $data['trap_type'] = TrapType::where('iStatus', 1)->get();
+        $data['task_type'] = TaskType::where('iStatus', 1)->get();
+        $data['sr_details'] = SrDetail::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+        $data['taskLandingRate'] = TaskLandingRate::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+        $data['taskLarval'] = TaskLarval::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+        $data['taskTrap'] = TaskTrap::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+        $data['taskTreatment'] = TaskTreatment::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+        $data['taskOther'] = TaskOther::where('dAddedDate', '>=',$date)->orWhere('dModifiedDate', '>=', $date)->get();
+
+        $response = [
+            'status' => 200,
+            'message' => 'Data found',
+            'data' => $data
+        ];
+
+        return response()->json($response);
+
+    }
+    public function siteArr($sites, $country){
+        $geoArr = [];
+        $message = 'No Data Found';
+        $status = '404';
+        $i = 0;
+        if(count($sites)){
+            foreach($sites as $site){
+                //dd($site);
+                if(isset($site->polygon) && $site->polygon != ''){
+                        //print_r($site);
+    
+                    $polygon = str_replace("POLYGON((", '', $site->polygon);
+                    $polygon = str_replace("))", '', $polygon);
+    
+                        //print_r($polygon);
+    
+                    $polyArr = explode(",", $polygon);
+    
+                        //print_r($polyArr);
+    
+                    foreach($polyArr as $latlng){
+                        $latLngArr = explode(" ", $latlng);
+    
+                            //print_r($latLngArr);
+                        $geoArr['sites'][$i]['polygon'][] = array(
+                            'lat' => (float) $latLngArr[1],
+                            'lng' => (float) $latLngArr[0]
+                            );
+                      
+                    }
+                    if(isset($site->polycenter) && $site->polycenter != ''){
+                        $center = str_replace("POINT(", '', $site->polycenter);
+                        $polyCenter = str_replace(")", '', $center);
+                        $polyCenterArr = explode(" ", $polyCenter);
+                            //print_r($polyCenterArr); die;
+                        $geoArr['sites'][$i]['polyCenter'] = array(
+                            'lat' => (float) $polyCenterArr[1],
+                            'lng' => (float) $polyCenterArr[0]
+                            );
+                    }
+                    $geoArr['sites'][$i]['siteid'] = $site->siteid;
+                    $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
+                    $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                    $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                    $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                    $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                    //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
+                } else if(isset($site->point) && $site->point != ''){
+    
+                    $point = str_replace("POINT(", '', $site->point);
+                    $point = str_replace(")", '', $point);
+    
+                    $pointArr = explode(" ", $point);
+    
+                        //print_r($latLngArr);
+    
+                    $geoArr['sites'][$i]['point'][] =  array(
+                        'lat' => (float) $pointArr[1],
+                        'lng' => (float) $pointArr[0]
+                        );
+                    $geoArr['sites'][$i]['siteid'] = $site->siteid;
+                    $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
+                    $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                    $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                    $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                    $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                    //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
+                } else if(isset($site->poly_line) && $site->poly_line != ''){
+                    $polyLine = str_replace("LINESTRING(", '', $site->poly_line);
+                    $polyLine = str_replace(")", '', $polyLine);
+    
+                        //print_r($polygon);
+    
+                    $polyLineArr = explode(",", $polyLine);
+    
+                        //print_r($polyArr);
+    
+                    foreach($polyLineArr as $latlng){
+                        $polyLineLatLngArr = explode(" ", $latlng);
+    
+                            //print_r($latLngArr);
+                        $geoArr['sites'][$i]['poly_line'][] = array(
+                            'lat' => (float) $polyLineLatLngArr[1],
+                            'lng' => (float) $polyLineLatLngArr[0]
+                            );
+                       
+                    }
+                    $geoArr['sites'][$i]['siteid'] = $site->siteid;
+                    $geoArr['sites'][$i]['icon'] = $this->getSiteTypeIcon($site->stypeid, $country);
+                    $geoArr['sites'][$i]['cityid'] = $site->iCityId;
+                    $geoArr['sites'][$i]['zoneid'] = $site->iZoneId;
+                    $geoArr['sites'][$i]['stypeid'] = $site->stypeid;
+                    $geoArr['sites'][$i]['site_name'] = $site->site_name;
+                    //$geoArr['sites'][$i]['site_attr'] = $site->site_attr;
+                }
+                $i++;
+                $message = "Data Found";
+                $status = '200';
+            }
+        }
+        return $geoArr;
+    }
+
 }
+

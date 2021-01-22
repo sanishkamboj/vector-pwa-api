@@ -50,6 +50,18 @@ class Site extends Model
         return $this->belongsTo(State::class, 'iStateId');
     }
     public static function addRecord($data){
-        DB::table('site_mas')->insert($data);
+        if($data['iGeometryType'] == 2){
+            $query = "INSERT INTO site_mas(\"vName\", \"iSTypeId\", \"iSSTypeId\", \"vAddress1\", \"iGeometryType\", \"vPolygonLatLong\", \"vPolyLineLatLong\", \"vLatitude\", \"vLongitude\", \"iStatus\", \"dAddedDate\") VALUES ('".$data['vName']."', ".$data['iSTypeId'].", ".$data['iSSTypeId'].", '".$data['vAddress1']."', ".$data['iGeometryType'].", ST_GeomFromText('POLYGON((".$data['vPolygonLatLong']."))', 4326), NULL, '".$data['vLatitude']."', '".$data['vLongitude']."', 1, '".$data['dAddedDate']."')";
+        } else if($data['iGeometryType'] == 3){
+            $query = "INSERT INTO site_mas(\"vName\", \"iSTypeId\", \"iSSTypeId\", \"vAddress1\", \"iGeometryType\", \"vPolygonLatLong\", \"vPolyLineLatLong\", \"vLatitude\", \"vLongitude\", \"iStatus\", \"dAddedDate\") VALUES ('".$data['vName']."', ".$data['iSTypeId'].", ".$data['iSSTypeId'].", '".$data['vAddress1']."', ".$data['iGeometryType'].", NULL, ST_GeomFromText('LINESTRING(".$data['vPolyLineLatLong'].")', 4326), '".$data['vLatitude']."', '".$data['vLongitude']."', 1, '".$data['dAddedDate']."')";
+        }
+        DB::insert($query);
+    }
+
+    public static function getSitesByDate($date){
+        $data = DB::select(DB::raw('SELECT site_mas."iSiteId" as siteid, "vName" as site_name, "iSTypeId" as sTypeId, "iCityId", site_mas."iZoneId",  site_mas."vAddress1", site_mas."vAddress2", site_mas."vStreet", site_mas."iStateId", site_mas."iCountyId", st_astext(ST_Centroid("vPolygonLatLong")) as polyCenter, st_astext("vPolygonLatLong") as polygon, st_astext("vPointLatLong") as point, st_astext("vPolyLineLatLong") as poly_line FROM site_mas Where "iSTypeId" IN(Select "iSTypeId" FROM site_type_mas) AND "iStatus" = 1 AND "dAddedDate" >= \''.$date.'\' OR "dModifiedDate" >= \''.$date.'\'  ORDER BY siteid'));
+        //dd($data);
+        return $data;
+
     }
 }
