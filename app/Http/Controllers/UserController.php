@@ -640,8 +640,11 @@ class UserController extends Controller
             $arr['iGeometryType'] = $site['geometryType'];
             if(isset($site['polygonLatLong']) && $site['polygonLatLong'] != ''){
                 $latLngArr = json_decode($site['polygonLatLong']);
-                $lnlg = [];    
-                foreach($latLngArr[0] as $lat_lng){
+                $lnlg = [];  
+                if(count($latLngArr) == 1){
+                    $latLngArr = $latLngArr[0];
+                }
+                foreach($latLngArr as $lat_lng){
                         if($lat_lng->lng != ''){
                             $lnlg[] = $lat_lng->lng." ".$lat_lng->lat;
                         }
